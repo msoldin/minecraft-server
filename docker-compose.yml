@@ -8,7 +8,7 @@ services:
     volumes:
       - ./data:/data
     environment:
-      MEMORYSIZE: "4G"
+      MEMORY_SIZE: "4G"
     ports:
       - "25565:25565"
       - "8123:8123"
