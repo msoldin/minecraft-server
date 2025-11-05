@@ -16,6 +16,7 @@ services:
       - minecraft
     stdin_open: true
     tty: true
+    restart: always
 
 networks:
   minecraft:

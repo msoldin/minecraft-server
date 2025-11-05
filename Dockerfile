@@ -1,8 +1,8 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
-ARG MINECRAFT_VERSION=1.21.3
-ARG FABRIC_LOADER_VERSION=0.16.9
-ARG FABRIC_INSTALLER_VERSION=1.0.1
+ARG MINECRAFT_VERSION=1.21.10
+ARG FABRIC_LOADER_VERSION=0.17.3
+ARG FABRIC_INSTALLER_VERSION=1.1.0
 
 WORKDIR /opt/minecraft
 RUN --mount=target=/build,source=build /build/install-packages.sh
