@@ -1,0 +1,20 @@
+{
+    "minecraft_version": "1.21.10",
+    "fabric_loader_version": "0.17.3",
+    "fabric_installer_version": "1.1.0",
+    "mods": [
+        "fabric-api",
+        "c2me-fabric",
+        "chunky",
+        "clumps",
+        "essential-commands",
+        "fallingtree",
+        "ferrite-core",
+        "lithium",
+        "luckperms",
+        "scalablelux",
+        "servercore",
+        "unlock-all-recipes",
+        "worldedit"
+    ]
+}

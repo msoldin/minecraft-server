@@ -23,7 +23,7 @@ stop: ## docker-compose stop --rmi all --remove-orphans: ## (stops and cleans up
 	docker compose down --rmi all --remove-orphans;
 
 .PHONY: attach
-attach: ## docker attach mcserver ## (attaches to minecraft paper jar for issuing commands)
+attach: ## docker attach mcserver ## (attaches to minecraft jar for issuing commands)
 	@echo "Attaching to Minecraft..."; \
 	echo "Ctrl-C stops minecraft and exits"; \
 	echo "Ctrl-P Ctrl-Q only exits"; \

@@ -6,7 +6,8 @@ services:
       context: .
     container_name: "minecraft"
     volumes:
-      - ./data:/data
+      - ./data:/data:rw
+      - ./config.json:/config/config.json:ro
     environment:
       MEMORY_SIZE: "4G"
     ports:
