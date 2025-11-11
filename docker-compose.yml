@@ -8,8 +8,7 @@ services:
     volumes:
       - ./data:/data:rw
       - ./config.json:/config/config.json:ro
-    environment:
-      MEMORY_SIZE: "4G"
+      - minecraft_versions:/opt/minecraft
     ports:
       - "25565:25565"
       - "8123:8123"
@@ -22,3 +21,6 @@ services:
 networks:
   minecraft:
     name: minecraft   
+
+volumes:
+  minecraft_versions:
