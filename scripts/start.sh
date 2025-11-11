@@ -16,6 +16,7 @@ if ! id "$DOCKER_USER" >/dev/null 2>&1; then
     adduser $DOCKER_USER --shell /bin/sh --uid $USER_ID --ingroup $DOCKER_GROUP --disabled-password --gecos ""
     mkdir -p /opt/minecraft
     chown -vR $USER_ID:$GROUP_ID /data
+    chown -vR $USER_ID:$GROUP_ID /backups
     chown -vR $USER_ID:$GROUP_ID /opt/minecraft
 fi
 

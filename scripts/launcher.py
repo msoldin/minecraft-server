@@ -1,8 +1,14 @@
 import os
+import sys
+import time
 import json
 import shutil
+import zipfile
 import requests
+import threading
+import subprocess
 from pathlib import Path
+from mcrcon import MCRcon
 from datetime import datetime
 from typing import List, Optional
 from dataclasses import dataclass
@@ -23,6 +29,7 @@ class MinecraftConfig:
     fabric_loader_version: str
     fabric_installer_version: str
     memory_size: str
+    backup_period: int
     mods: List[str]
 
     @staticmethod
@@ -38,7 +45,7 @@ class SystemConfig:
     mods_dir: Path
     server_dir: Path
     config_path: Path
-    profile_path: Path
+    backup_path: Path
 
 
     @staticmethod
@@ -49,7 +56,7 @@ class SystemConfig:
                 mods_dir=Path("/data/mods"),
                 server_dir=Path("/opt/minecraft"),
                 config_path=Path("/config/config.json"),
-                profile_path=Path("/config/minecraft_version.sh")
+                backup_path=Path("/backups")
             )
         else:
             base = Path("./local")
@@ -61,7 +68,7 @@ class SystemConfig:
                 mods_dir=base / "data" / "mods",
                 server_dir=base / "server",
                 config_path=Path("config.json"),
-                profile_path=base / "config" / "minecraft_version.sh"
+                backup_path=base / "backups"
             )
 
 
@@ -152,8 +159,47 @@ def start_server(minecraft_config: MinecraftConfig, system_config: SystemConfig)
     "-jar", f"{system_config.server_dir}/{minecraft_config.minecraft_version}-server.jar",
     "nogui"
     ]
-    os.execvp(java_cmd[0], java_cmd)
+    server_proc = subprocess.Popen(
+            java_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True
+        )
+    return server_proc
 
+def relay_output(proc: subprocess.Popen) -> None:
+    if proc.stdout is None:
+        return
+    for line in iter(proc.stdout.readline, ''):
+        sys.stdout.write(line)
+        sys.stdout.flush()  # flush immediately so it appears in console
+
+def backup_world(system_config: SystemConfig):
+    """Perform a backup of the world directory."""
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        zip_path = system_config.backup_path / f"world-backup-{timestamp}.zip"
+        with MCRcon(host="localhost", password="test", port=25575) as mcr:
+            mcr.command("say Backup is running!")
+            mcr.command("save-off")
+            mcr.command("save-all")
+            with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
+                for root, _, files in os.walk("/data/world"):
+                    for file in files:
+                        full_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(full_path, "/data/world")
+                        zipf.write(full_path, arcname=rel_path)
+            mcr.command("save-on")
+            mcr.command("say Backup is finished!")
+            
+    except Exception as e:
+        print(f"Backup failed ❌: {e}")
+
+def backup_deamon(minecraft_config: MinecraftConfig, system_config: SystemConfig):
+    while True:
+        backup_world(system_config=system_config)
+        time.sleep(minecraft_config.backup_period * 60)
 
 # Example usage
 def main():
@@ -172,8 +218,9 @@ def main():
     write_eula(data_dir=system_config.data_dir)
     
     print(f"Launcher finished. Starting Minecraft server... 🚀")
-    start_server(minecraft_config=minecraft_config, system_config=system_config)
-
+    server_proc = start_server(minecraft_config=minecraft_config, system_config=system_config)
+    threading.Thread(target=relay_output, args=(server_proc,), daemon=True).start()
+    backup_deamon(minecraft_config=minecraft_config, system_config=system_config)
 
 if __name__ == "__main__":
     main()
