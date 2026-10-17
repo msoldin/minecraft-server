@@ -7,15 +7,28 @@ from .config import ModFile, MinecraftConfig, SystemConfig
 from .utils import download_file
 
 
-def download_mods(
-    minecraft_config: MinecraftConfig, system_config: SystemConfig
-) -> None:
-    for mod in minecraft_config.mods:
-        latest = get_latest_modrinth_version(mod, minecraft_config.minecraft_version)
+def sync_mods(minecraft_config: MinecraftConfig, system_config: SystemConfig) -> None:
+    system_config.mods_dir.mkdir(parents=True, exist_ok=True)
+
+    wanted_files = set()
+
+    for project_slug in minecraft_config.mods:
+        latest = get_latest_modrinth_version(
+            project_slug=project_slug,
+            game_version=minecraft_config.minecraft_version
+        )
+
         if latest:
-            download_mod(latest, system_config.mods_dir)
+            wanted_files.add(latest.name)
+            download_mod(mod=latest, dest_folder=system_config.mods_dir)
 
-
+    # Remove jars that aren't part of the desired configuration
+    for path in system_config.mods_dir.glob("*.jar"):
+        if path.name not in wanted_files:
+            print(f"🗑️ Removing old/unconfigured mod: {path.name}")
+            path.unlink()
+         
+         
 def download_mod(mod: ModFile, dest_folder: Path):
     """Download a mod .jar file to the given destination folder."""
     return download_file(mod.url, mod.name, dest_folder)
